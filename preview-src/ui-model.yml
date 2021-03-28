@@ -177,6 +177,9 @@ page:
     - content: Edit & Run Cypher
       url: edit-run-cypher.html
       urlType: internal
+    - content: GraphGist
+      url: graphgist.html
+      urlType: internal
 
 asciidoc:
   attributes:

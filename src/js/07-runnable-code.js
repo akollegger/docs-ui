@@ -5,7 +5,9 @@ import { forcedGraph } from './modules/graph'
 document.addEventListener('DOMContentLoaded', function () {
   var driver
   var defaultDatabase = 'movies'
+  var defaultBackend = 'neo4jlabs'
   var databasePrefix = 'database:'
+  var backendPrefix = 'backend:'
   var modePrefix = 'mode:'
   var instantClass = 'instant'
   var graphClass = 'graph'
@@ -24,7 +26,14 @@ document.addEventListener('DOMContentLoaded', function () {
   // Runnable Cypher blocks (Experimental)
   var runnable = Array.from(document.querySelectorAll('.runnable'))
 
-  if (!runnable.length || !window.neo4j) return
+  const blocksUsingNeo4jJavaScriptDriver = runnable.filter((block) => !block.className.includes('backend:graphgist'))
+  if (blocksUsingNeo4jJavaScriptDriver.length && !window.neo4j) {
+    // use :page-includedriver: attribute in your AsciiDoc document to include the Neo4j driver!
+    console.warn('Neo4j driver is not loaded, unable to run Cypher queries...')
+    return
+  }
+  // no runnable block, skipping.
+  if (runnable.length === 0) return
 
   var initDriver = function () {
     if (!driver) {
@@ -200,79 +209,86 @@ document.addEventListener('DOMContentLoaded', function () {
     content.appendChild(error)
   }
 
-  var run = function (mode, database, content, footer, button, loading) {
+  var run = function (mode, database, content, footer, button, loading, backend = 'neo4jlabs') {
     // Get Code
     // TODO: Parameters etc
     var input = cleanCode(content.querySelector('pre').innerText)
 
-    loading.innerHTML = 'Initialising Driver&hellip;'
-    button.disabled = true
+    if (backend === 'neo4jlabs') {
+      loading.innerHTML = 'Initialising Driver&hellip;'
+      button.disabled = true
 
-    if (window.mixpanel) {
-      window.mixpanel.track('DOCS_CODE_RUN_EXAMPLE', {
-        pathname: window.location.origin + window.location.pathname,
-        search: window.location.search,
-        hash: window.location.hash,
-        database,
-        mode,
-        language: 'cypher',
-        code: input,
-      })
+      if (window.mixpanel) {
+        window.mixpanel.track('DOCS_CODE_RUN_EXAMPLE', {
+          pathname: window.location.origin + window.location.pathname,
+          search: window.location.search,
+          hash: window.location.hash,
+          database,
+          mode,
+          language: 'cypher',
+          code: input,
+        })
+      }
+
+      initDriver()
+        .then(function (driver) {
+          loading.innerHTML = 'Running Query&hellip;'
+
+          var session = driver.session({ mode: mode, database: database })
+          var tx = session.beginTransaction()
+
+          return tx.run(input)
+            .then(function (res) {
+              button.disabled = false
+              loading.innerHTML = ''
+              footer.classList.add('has-results')
+
+              renderResults(content, res)
+            })
+            .catch(function (err) {
+              button.disabled = false
+              loading.innerHTML = ''
+              footer.classList.add('has-results')
+
+              renderError(content, err)
+            })
+            .then(function () {
+              return tx.rollback()
+            })
+            .then(function () {
+              return session.close()
+            })
+        })
+        .catch(function (err) {
+          button.disabled = false
+          loading.innerHTML = ''
+          footer.classList.add('has-results')
+
+          if (window.mixpanel) {
+            window.mixpanel.track('DOCS_CODE_RUN_ERROR', {
+              pathname: window.location.origin + window.location.pathname,
+              search: window.location.search,
+              hash: window.location.hash,
+              database,
+              mode,
+              code: input,
+              message: err.message,
+            })
+          }
+
+          renderError(content, err)
+        })
+    } else {
+      // backend: graphgist!
+      // TODO!
+      console.log('Execute query on GraphGist backend!')
     }
-
-    initDriver()
-      .then(function (driver) {
-        loading.innerHTML = 'Running Query&hellip;'
-
-        var session = driver.session({ mode: mode, database: database })
-        var tx = session.beginTransaction()
-
-        return tx.run(input)
-          .then(function (res) {
-            button.disabled = false
-            loading.innerHTML = ''
-            footer.classList.add('has-results')
-
-            renderResults(content, res)
-          })
-          .catch(function (err) {
-            button.disabled = false
-            loading.innerHTML = ''
-            footer.classList.add('has-results')
-
-            renderError(content, err)
-          })
-          .then(function () {
-            return tx.rollback()
-          })
-          .then(function () {
-            return session.close()
-          })
-      })
-      .catch(function (err) {
-        button.disabled = false
-        loading.innerHTML = ''
-        footer.classList.add('has-results')
-
-        if (window.mixpanel) {
-          window.mixpanel.track('DOCS_CODE_RUN_ERROR', {
-            pathname: window.location.origin + window.location.pathname,
-            search: window.location.search,
-            hash: window.location.hash,
-            database,
-            mode,
-            code: input,
-            message: err.message,
-          })
-        }
-
-        renderError(content, err)
-      })
   }
 
   runnable.map(function (row) {
     var mode = 'READ'
     var database = defaultDatabase
+    var backend = defaultBackend
 
     var content = row.querySelector('.content')
     var pre = content.querySelector('pre')
@@ -320,15 +336,17 @@ document.addEventListener('DOMContentLoaded', function () {
         database = el.replace(databasePrefix, '')
       } else if (el.startsWith(modePrefix) && validModes.indexOf(el.toLowerCase()) > -1) {
         mode = el.replace(modePrefix, '').toUpperCase()
+      } else if (el.startsWith(backendPrefix)) {
+        backend = el.replace(backendPrefix, '').toLowerCase()
       }
     })
 
     button.addEventListener('click', function () {
-      run(mode, database, content, footer, button, loading)
+      run(mode, database, content, footer, button, loading, backend)
     })
 
     if (row.classList.contains(instantClass)) {
-      run(mode, database, content, footer, button, loading)
+      run(mode, database, content, footer, button, loading, backend)
     }
   })
 })

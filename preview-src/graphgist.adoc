@@ -3,7 +3,6 @@
 :twitter: @evelgab
 :page-slug: exploring-the-star-wars-social-network
 :page-neo4j-version: 3.5
-:page-includegraphgist: true
 
 I recently looked at the whole Star Wars universe from a computational perspective, where I extracted and analyzed
 social networks from all seven films. The social network structure revealed some interesting differences
@@ -37,7 +36,7 @@ combined together.
 
 //setup
 //hide
-[source,cypher,role="initialize hidden"]
+[source,cypher,role="runnable instant hidden backend:graphgist"]
 ----
 CREATE
   (Episode1:Movie {name: 'Episode I: The Phantom Menace'}),
@@ -800,7 +799,7 @@ CREATE
 Let's look at some basic information from the database. The following query extracts
 all the films that are included in the network.
 
-[source,cypher,role="runnable editable backend:graphgist"]
+[source,cypher,role="runnable backend:graphgist"]
 ----
 MATCH (m:Movie)
 RETURN m.name
@@ -820,7 +819,7 @@ compare to the rest?
 Let's start with looking at the number of characters in each of the episodes. The following
 query extracts characters and returns their count aggregated by the movie that they appear in.
 
-[source,cypher]
+[source,cypher,role="runnable editable backend:graphgist"]
 ----
 MATCH (m:Movie)<-[:APPEARS_IN]-(character)
 RETURN m.name AS movie, count(*) AS characters
@@ -838,7 +837,7 @@ two characters that both appear within the same movie and return their count for
 simplification because I'm assuming that if two characters have link between them, then they interact
 in every movie where they both appear.
 
-[source,cypher]
+[source,cypher,role="runnable editable backend:graphgist"]
 ----
 MATCH (m)<-[:APPEARS_IN]-(character)-[:SPEAKS_WITH]-(character2)-[:APPEARS_IN]->(m)
 RETURN m.name AS movie, count(*) AS edges
@@ -860,7 +859,7 @@ The following query extracts all the characters that appear in a specific episod
 all the interactions between them. I'm using the Episode VII
 as an example:
 
-[source,cypher]
+[source,cypher,role="runnable editable graph backend:graphgist"]
 ----
 MATCH network=(m)<-[:APPEARS_IN]-(character1)-[r]-(character2)-[:APPEARS_IN]->(m)
 WHERE m.name='Episode VII: The Force Awakens'
@@ -882,7 +881,7 @@ In our Star Wars network, this corresponds to the total number of scenes where e
 The following query extracts the number of `SPEAKS_WITH` relations for each character and returns
 the top 10 results.
 
-[source,cypher]
+[source,cypher,role="runnable editable backend:graphgist"]
 ----
 MATCH (ch1)-[:SPEAKS_WITH]-(ch2)
 RETURN ch1.name AS name, count(*) AS degree
@@ -900,7 +899,7 @@ extracts the characters that speak to each other and appear within the same film
 the number of such connections for each character. I'm using the orignal Episode IV: A New Hope
 in the example.
 
-[source,cypher]
+[source,cypher,role="runnable editable backend:graphgist"]
 ----
 MATCH (m)<-[:APPEARS_IN]-(ch1)-[:SPEAKS_WITH]-(ch2)-[:APPEARS_IN]->(m)
 WHERE m.name='Episode IV: A New Hope'
@@ -916,7 +915,7 @@ We can also visualize the results and look at the specific interactions.
 For example, the following query extracts all the
 characters that interact with Luke Skywalker, together with the movies that they appear in.
 
-[source,cypher]
+[source,cypher,role="runnable editable graph backend:graphgist"]
 ----
 MATCH path=(luke:Person {name: 'LUKE'})-[:SPEAKS_WITH]-(other)-[:APPEARS_IN]-(movie)
 RETURN path

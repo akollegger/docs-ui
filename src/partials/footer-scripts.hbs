@@ -19,10 +19,3 @@
 {{#if page.attributes.includedriver}}
 <script src="https://cdn.jsdelivr.net/npm/neo4j-driver@4.2.2/lib/browser/neo4j-web.min.js"></script>
 {{/if}}
-
-{{#if page.attributes.includegraphgist}}
-  <script type="text/javascript" src="https://neo4j.com/wp-content/themes/neo4jweb/assets/js/graphgist-render.js"></script>
-  {{#with (assets-path page)}}
-    <script async src="{{{this}}}/js/vendor/graphgist.js"></script>
-  {{/with}}
-{{/if}}

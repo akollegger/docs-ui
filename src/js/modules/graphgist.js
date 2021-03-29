@@ -55,3 +55,64 @@ export async function executeQuery (cypherQuery, sessionId, neo4jVersion = '3.5'
   }
   return sendRequest(executeQueryData)
 }
+
+/**
+ * Get featured GraphGists
+ * @returns {Promise<Object>}
+ */
+export async function getFeatured () {
+  return sendRequest({
+    query: `{
+  GraphGist(featured: true) {
+    uuid title slug summary image { source_url } author { name } industries { slug name } use_cases { slug name }
+  }
+}`,
+  })
+}
+
+/**
+ * Get industries.
+ * @returns {Promise<Object>}
+ */
+export async function getIndustries () {
+  return sendRequest({
+    query: `{
+  Industry {
+    uuid name slug image { source_url }
+  }
+}`,
+  })
+}
+
+/**
+ * Get use cases.
+ * @returns {Promise<Object>}
+ */
+export async function getUseCases () {
+  return sendRequest({
+    query: `{
+  UseCase {
+    uuid name slug image { source_url }
+  }
+}`,
+  })
+}
+
+/**
+ * Get gists per category
+ * @param category {string}
+ * @returns {Promise<Object>}
+ */
+export async function getGistsPerCategory (category) {
+  return sendRequest({
+    operationName: 'GraphGistsByCategory',
+    query: `query GraphGistsByCategory($slug: String!) {
+  GraphGist: graphGistsByCategory(slug: $slug) {
+    uuid title slug summary image { source_url } author { name } industries { slug name } use_cases { slug name }
+  }
+}`,
+    variables: {
+      slug: category,
+    },
+  })
+}

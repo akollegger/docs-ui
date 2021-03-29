@@ -1,0 +1,25 @@
+= Neo4j GraphGists
+:page-layout: graphgists-index
+
+[.leading.secondary]
+== Introduction
+
+image::https://dist.neo4j.com/wp-content/uploads/20160303101829/noun_22440-green-02.png[role=left]
+Building a graph of your data is fairly simple as the graph structure represents the real world much better than columns and rows of data.
+GraphGists are teaching tools which allow you to explore how data in a particular domain would be modeled as a graph and see some example queries of that graph data.
+Any developer can create a GraphGist by visiting https://portal.graphgist.org.
+
+[#explore-use-case]
+== Explore By Use Case
+
+// dynamic content
+
+[#explore-industry]
+== Explore By Industry
+
+// dynamic content
+
+[#featured]
+== Featured GraphGists
+
+// dynamic content

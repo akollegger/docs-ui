@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function () {
     ])
   }
 
-  var renderResultsAsGraph = function (content, res) {
+  const renderResultsAsGraph = function (content, res) {
     const container = createElement('div', 'gram')
 
     content.appendChild(container)
@@ -111,7 +111,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // filter by paths
     const activeNodes = new Set()
-    console.log('res', res)
     for (const path of res.paths) {
       const keys = Object.keys(path)
       for (const key of keys) {
@@ -194,7 +193,7 @@ document.addEventListener('DOMContentLoaded', function () {
     return data
   }
 
-  var renderResults = function (content, res, renderAsGraph) {
+  const renderResults = function (content, res, renderAsGraph) {
     // Default view
     var showGraph = content.parentNode.classList.contains(graphClass)
 
@@ -361,7 +360,12 @@ document.addEventListener('DOMContentLoaded', function () {
           loading.innerHTML = ''
           footer.classList.add('has-results')
 
-          renderResults(content, res)
+          if (res.error) {
+            // query is invalid
+            renderError(content, { message: res.error })
+          } else {
+            renderResults(content, res)
+          }
         } catch (executeQueryError) {
           button.disabled = false
           loading.innerHTML = ''
